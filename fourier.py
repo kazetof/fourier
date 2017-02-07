@@ -73,8 +73,6 @@ class Fourier:
 			y_ = y - np.mean(y)
 			y1 = np.r_[zero_vec,y_]
 			y2 = np.r_[y_,zero_vec]
-			#return np.sum( y1 * y2 ) 
-			#return np.sum( y1 * y2 ) / float(num-k)
 			return np.dot(y1,y2) / float(num)
 
 		k_num = 100
