@@ -37,11 +37,11 @@ class Function:
 
 
 class Fourier:
-	def __init__(self,func_obj,num,basis_num):
+	def __init__(self,func_obj,sample_num,basis_num):
 		"""
 		--- input param --- 
 		func_obj : EstimatedFunction object
-		num : int
+		sample_num : int
 			The number which domain is splitted.
 		basis_num : int
 			The number of finite series, which mean max index of fourier coefficient.
@@ -55,12 +55,18 @@ class Fourier:
 		self.L = func_obj.T / 2.
 		self.func = func_obj.func
 		self.domain = func_obj.domain
-		self.num = num
-		self.autocor = None
+		self.sample_num = sample_num
+		self.sampling_time = 1. #so far
+		self.sample_freq = self.sample_num / self.sampling_time
+		self.nyq_freq = (1/2.) * self.sample_freq
+		self.fourier_freq_num = int(np.floor(self.sample_num/2.))
+		self.fourier_freq = np.linspace(0,self.nyq_freq,self.fourier_freq_num)
 		self.x = np.linspace(func_obj.domain[0],func_obj.domain[1],num)
 		self.y = func_obj.func(self.x)
-		self.dx = func_obj.T / self.num
+		self.dx = func_obj.T / self.sample_num #sample_spacing
+		#self.sample_spacing = self.T / self.sample_num
 		self.basis_num = basis_num
+		self.autocor = None
 		self.func_hat = None
 		self.fourier_coef = None
 		self.spectrum = None
@@ -79,7 +85,7 @@ class Fourier:
 
 		k_num = 100
 		k_vec = np.arange(0,k_num,1)
-		self.autocor = np.array( [ auto_correlation(self.y,self.num,k) for k in k_vec] )
+		self.autocor = np.array( [ auto_correlation(self.y,self.sample_num,k) for k in k_vec] )
 		plot_k = np.arange(-k_num,k_num,1)
 		plot_cor = np.r_[self.autocor[::-1],self.autocor]
 		plt.plot(plot_k,plot_cor)
@@ -144,15 +150,12 @@ class Fourier:
 		f : float 
 			frequency
 		"""
-		i_vec = np.linspace(self.domain[0], self.domain[1], self.num)
+		i_vec = np.linspace(self.domain[0], self.domain[1], self.sample_num)
 		y = np.sum( self.func(i_vec) * np.exp( - (np.pi * f * i_vec / self.L) * 1j ) )
 		return y
 
-	def fourier_transform(self, f_start=0.0, f_end=200):
-		#band = (f_end - f_start) / self.num
-		#f_vec = np.arange(f_start,f_end,band)
-		f_vec = np.arange(f_start,f_end,1.)
-		self.fourier_coef = np.array([ self.__fourier_transform_each_f(f) for f in f_vec ])
+	def fourier_transform(self):
+		self.fourier_coef = np.array([ self.__fourier_transform_each_f(f) for f in self.fourier_freq ])
 		self.spectrum = np.abs(self.fourier_coef)
 
 	def spectral_plot(self,normalize_bool=True):
@@ -161,12 +164,11 @@ class Fourier:
 
 		fig = plt.figure()
 		ax = fig.add_subplot(111)
-
 		if normalize_bool == True:
 			spectrum_norm = self.spectrum / np.max(self.spectrum)
-			ax.plot(spectrum_norm)
+			ax.plot(self.fourier_freq, spectrum_norm)
 		else:
-			ax.plot(self.spectrum)
+			ax.plot(self.fourier_freq, self.spectrum)
 
 		plt.xlabel("frequency")
 		plt.ylabel("spectrum")
@@ -175,6 +177,9 @@ class Fourier:
 
 def g(x):
 	return np.sin(x) * np.sin(2.*x) + np.sin(3.*x)
+
+def g2(x):
+	return np.sin(x)
 
 def h(x):
 	return 3*x**2 + 5*x + 23
@@ -192,13 +197,20 @@ num = 1000.
 g_func_form = "np.sin(x) * np.sin(2.*x) + np.sin(3.*x) + 100"
 G = Function(g,[-T/2.,T/2.],g_func_form)
 #G.plot_func()
-G_fourier = Fourier(G,num=1000,basis_num=100)
+G_fourier = Fourier(G,sample_num=1000,basis_num=100)
 G_fourier.fourier_expansion_plot(title="g(x)")
 #fourier.plot_auto_corr()
 G_fourier.fourier_expansion()
 G_fourier.fourier_transform_each_f(4)
 G_fourier.fourier_transform(f_start=0,f_end=200)
 G_fourier.spectral_plot()
+
+g2_func_form = "np.sin(x)"
+G2 = Function(g2,[-T/2.,T/2.],g_func_form)
+G2 = Function(g2,[-np.pi,np.pi],g_func_form)
+G2.plot_func()
+G2_fourier = Fourier(G2,sample_num=1000,basis_num=100)
+G2_fourier.spectral_plot()
 
 
 h_func_form = "3*x**2 + 5*x + 23"
