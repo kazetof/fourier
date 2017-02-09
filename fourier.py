@@ -62,6 +62,8 @@ class Fourier:
 		self.dx = func_obj.T / self.num
 		self.basis_num = basis_num
 		self.func_hat = None
+		self.fourier_coef = None
+		self.spectrum = None
 
 	def plot_auto_corr(self):
 		def auto_correlation(y,num,k):
@@ -101,6 +103,7 @@ class Fourier:
 
 	def __fourier_each_x(self,x):
 		"""
+		real value fourie expansion.
 		x : float
 		"""
 		n_vec = np.linspace(1,self.basis_num,self.basis_num)
@@ -136,8 +139,39 @@ class Fourier:
 		plt.legend()
 		fig.show()
 
+	def __fourier_transform_each_f(self,f):
+		"""
+		f : float 
+			frequency
+		"""
+		i_vec = np.linspace(self.domain[0], self.domain[1], self.num)
+		y = np.sum( self.func(i_vec) * np.exp( - (np.pi * f * i_vec / self.L) * 1j ) )
+		return y
+
+	def fourier_transform(self, f_start=0.0, f_end=100):
+		#band = (f_end - f_start) / self.num
+		#f_vec = np.arange(f_start,f_end,band)
+		f_vec = np.arange(f_start,f_end,1.)
+		self.fourier_coef = np.array([ self.__fourier_transform_each_f(f) for f in f_vec ])
+		self.spectrum = np.abs(self.fourier_coef)
+
+	def spectral_plot(self,normalize_bool=True):
+		fig = plt.figure()
+		ax = fig.add_subplot(111)
+
+		if normalize_bool == True:
+			spectrum_norm = self.spectrum / np.max(self.spectrum)
+			ax.plot(spectrum_norm)
+		else:
+			ax.plot(self.spectrum)
+
+		plt.xlabel("frequency")
+		plt.ylabel("spectrum")
+		plt.title("spectrum plot")
+		plt.show()
+
 def g(x):
-	return np.sin(x) * np.sin(2.*x) + np.sin(3.*x) + 100
+	return np.sin(x) * np.sin(2.*x) + np.sin(3.*x)
 
 def h(x):
 	return 3*x**2 + 5*x + 23
@@ -156,9 +190,13 @@ g_func_form = "np.sin(x) * np.sin(2.*x) + np.sin(3.*x) + 100"
 G = EstimatedFunction(g,[-T/2.,T/2.],g_func_form)
 #G.plot_func()
 G_fourier = Fourier(G,num=1000,basis_num=100)
-#fourier.plot_auto_corr()
-#G_fourier.fourier_expansion()
 G_fourier.fourier_expansion_plot(title="g(x)")
+#fourier.plot_auto_corr()
+G_fourier.fourier_expansion()
+G_fourier.fourier_transform_each_f(4)
+G_fourier.fourier_transform(f_start=0,f_end=200)
+G_fourier.spectral_plot()
+
 
 h_func_form = "3*x**2 + 5*x + 23"
 H = EstimatedFunction(h,[-T/2.,T/2.],h_func_form)
