@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-class EstimatedFunction:
+class Function:
 	def __init__(self,func,domain,func_form=None):
 		"""
 		--- input param --- 
@@ -148,7 +148,7 @@ class Fourier:
 		y = np.sum( self.func(i_vec) * np.exp( - (np.pi * f * i_vec / self.L) * 1j ) )
 		return y
 
-	def fourier_transform(self, f_start=0.0, f_end=100):
+	def fourier_transform(self, f_start=0.0, f_end=200):
 		#band = (f_end - f_start) / self.num
 		#f_vec = np.arange(f_start,f_end,band)
 		f_vec = np.arange(f_start,f_end,1.)
@@ -156,6 +156,9 @@ class Fourier:
 		self.spectrum = np.abs(self.fourier_coef)
 
 	def spectral_plot(self,normalize_bool=True):
+		if self.spectrum == None:
+			self.fourier_transform()
+
 		fig = plt.figure()
 		ax = fig.add_subplot(111)
 
@@ -187,7 +190,7 @@ T = 200.
 num = 1000.
 
 g_func_form = "np.sin(x) * np.sin(2.*x) + np.sin(3.*x) + 100"
-G = EstimatedFunction(g,[-T/2.,T/2.],g_func_form)
+G = Function(g,[-T/2.,T/2.],g_func_form)
 #G.plot_func()
 G_fourier = Fourier(G,num=1000,basis_num=100)
 G_fourier.fourier_expansion_plot(title="g(x)")
@@ -199,18 +202,18 @@ G_fourier.spectral_plot()
 
 
 h_func_form = "3*x**2 + 5*x + 23"
-H = EstimatedFunction(h,[-T/2.,T/2.],h_func_form)
+H = Function(h,[-T/2.,T/2.],h_func_form)
 H_fourier = Fourier(H,num=1000,basis_num=100)
 #H_fourier.fourier_expansion()
 H_fourier.fourier_expansion_plot(title="h(x)")
 
 h2_func_form = "-3*x**2 + 2*x + 10"
-H2 = EstimatedFunction(h2,[-T/2.,T/2.],h2_func_form)
+H2 = Function(h2,[-T/2.,T/2.],h2_func_form)
 H2_fourier = Fourier(H2,num=1000,basis_num=100)
 H2_fourier.fourier_expansion_plot(title="h2(x)")
 
 h3_func_form = "-2*x**3 + 200*x**2 + 4*x + 4"
-H3 = EstimatedFunction(h3,[-T/2.,T/2.],h3_func_form)
+H3 = Function(h3,[-T/2.,T/2.],h3_func_form)
 H3_fourier = Fourier(H3,num=1000,basis_num=100)
 H3_fourier.fourier_expansion_plot(title="h3(x)")
 
